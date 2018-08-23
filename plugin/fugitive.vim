@@ -702,9 +702,9 @@ endfunction
 
 call s:add_methods('buffer',['getvar','setvar','getline','repo','type','spec','name','commit','path','rev','sha1','expand','containing_commit','up'])
 
-" Section: Git
+" Section: GitFugitive
 
-call s:command("-bang -nargs=? -complete=customlist,s:GitComplete Git :execute s:Git(<bang>0,<q-args>)")
+call s:command("-bang -nargs=? -complete=customlist,s:GitComplete GitFugitive :execute s:GitFugitive(<bang>0,<q-args>)")
 
 function! s:ExecuteInTree(cmd) abort
   let cd = exists('*haslocaldir') && haslocaldir() ? 'lcd' : 'cd'
@@ -717,7 +717,7 @@ function! s:ExecuteInTree(cmd) abort
   endtry
 endfunction
 
-function! s:Git(bang, args) abort
+function! s:GitFugitive(bang, args) abort
   if a:bang
     return s:Edit('edit', 1, a:args)
   endif
@@ -902,16 +902,16 @@ function! s:StageUndo() abort
     call s:StageReloadSeek(filename, line('.'), line('.'))
     let @" = hash
     return 'checktime|redraw|echomsg ' .
-          \ string('To restore, :Git cat-file blob '.hash[0:6].' > '.filename)
+          \ string('To restore, :GitFugitive cat-file blob '.hash[0:6].' > '.filename)
   endif
 endfunction
 
 function! s:StageDiff(diff) abort
   let [filename, section] = s:stage_info(line('.'))
   if filename ==# '' && section ==# 'staged'
-    return 'Git! diff --no-ext-diff --cached'
+    return 'GitFugitive! diff --no-ext-diff --cached'
   elseif filename ==# ''
-    return 'Git! diff --no-ext-diff'
+    return 'GitFugitive! diff --no-ext-diff'
   elseif filename =~# ' -> '
     let [old, new] = split(filename,' -> ')
     execute 'Gedit '.s:fnameescape(':0:'.new)
@@ -929,7 +929,7 @@ function! s:StageDiffEdit() abort
   let [filename, section] = s:stage_info(line('.'))
   let arg = (filename ==# '' ? '.' : filename)
   if section ==# 'staged'
-    return 'Git! diff --no-ext-diff --cached '.s:shellesc(arg)
+    return 'GitFugitive! diff --no-ext-diff --cached '.s:shellesc(arg)
   elseif section ==# 'untracked'
     let repo = s:repo()
     call repo.git_chomp_in_tree('add','--intent-to-add',arg)
@@ -944,7 +944,7 @@ function! s:StageDiffEdit() abort
     endif
     return ''
   else
-    return 'Git! diff --no-ext-diff '.s:shellesc(arg)
+    return 'GitFugitive! diff --no-ext-diff '.s:shellesc(arg)
   endif
 endfunction
 
@@ -1023,11 +1023,11 @@ function! s:StagePatch(lnum1,lnum2) abort
   for lnum in range(a:lnum1,a:lnum2)
     let [filename, section] = s:stage_info(lnum)
     if getline('.') =~# '^# .*:$' && section ==# 'staged'
-      return 'Git reset --patch'
+      return 'GitFugitive reset --patch'
     elseif getline('.') =~# '^# .*:$' && section ==# 'unstaged'
-      return 'Git add --patch'
+      return 'GitFugitive add --patch'
     elseif getline('.') =~# '^# .*:$' && section ==# 'untracked'
-      return 'Git add -N .'
+      return 'GitFugitive add -N .'
     elseif filename ==# ''
       continue
     endif
@@ -1045,10 +1045,10 @@ function! s:StagePatch(lnum1,lnum2) abort
   endfor
   try
     if !empty(add)
-      execute "Git add --patch -- ".join(map(add,'s:shellesc(v:val)'))
+      execute "GitFugitive add --patch -- ".join(map(add,'s:shellesc(v:val)'))
     endif
     if !empty(reset)
-      execute "Git reset --patch -- ".join(map(reset,'s:shellesc(v:val)'))
+      execute "GitFugitive reset --patch -- ".join(map(reset,'s:shellesc(v:val)'))
     endif
     if exists('first_filename')
       silent! edit!
