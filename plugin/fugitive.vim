@@ -942,6 +942,7 @@ function! s:StageDiffEdit() abort
     else
       call s:StageReloadSeek(arg,line('.'),line('.'))
     endif
+    execute "normal! \<C-W>K"
     return ''
   else
     return 'GitFugitive! diff --no-ext-diff '.s:shellesc(arg)
