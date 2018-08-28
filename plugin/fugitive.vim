@@ -908,28 +908,37 @@ endfunction
 
 function! s:StageDiff(diff) abort
   let [filename, section] = s:stage_info(line('.'))
+  execute 'only'
+
   if filename ==# '' && section ==# 'staged'
-    return 'GitFugitive! diff --no-ext-diff --cached'
+    execute 'GitFugitive! diff --no-ext-diff --cached'
+    return "normal! \<C-W>K"
   elseif filename ==# ''
-    return 'GitFugitive! diff --no-ext-diff'
+    execute 'GitFugitive! diff --no-ext-diff'
+    return "normal! \<C-W>K"
   elseif filename =~# ' -> '
     let [old, new] = split(filename,' -> ')
     execute 'Gedit '.s:fnameescape(':0:'.new)
+    execute "normal! \<C-W>K"
     return a:diff.' HEAD:'.s:fnameescape(old)
   elseif section ==# 'staged'
     execute 'Gedit '.s:fnameescape(':0:'.filename)
+    execute "normal! \<C-W>K"
     return a:diff.' -'
   else
     execute 'Gedit '.s:fnameescape('/'.filename)
+    execute "normal! \<C-W>K"
     return a:diff
   endif
 endfunction
 
 function! s:StageDiffEdit() abort
   let [filename, section] = s:stage_info(line('.'))
+  execute 'only'
   let arg = (filename ==# '' ? '.' : filename)
   if section ==# 'staged'
-    return 'GitFugitive! diff --no-ext-diff --cached '.s:shellesc(arg)
+    execute 'GitFugitive! diff --no-ext-diff --cached '.s:shellesc(arg)
+    return "normal! \<C-W>K"
   elseif section ==# 'untracked'
     let repo = s:repo()
     call repo.git_chomp_in_tree('add','--intent-to-add',arg)
@@ -942,10 +951,10 @@ function! s:StageDiffEdit() abort
     else
       call s:StageReloadSeek(arg,line('.'),line('.'))
     endif
-    execute "normal! \<C-W>K"
     return ''
   else
-    return 'GitFugitive! diff --no-ext-diff '.s:shellesc(arg)
+    execute 'GitFugitive! diff --no-ext-diff '.s:shellesc(arg)
+    return "normal! \<C-W>K"
   endif
 endfunction
 
@@ -2570,34 +2579,20 @@ function! s:BufReadIndex() abort
     call s:JumpInit()
     nunmap   <buffer>          P
     nunmap   <buffer>          ~
-    nnoremap <buffer> <silent> <C-N> :<C-U>execute <SID>StageNext(v:count1)<CR>
-    nnoremap <buffer> <silent> <C-P> :<C-U>execute <SID>StagePrevious(v:count1)<CR>
+    nnoremap <buffer> <silent> <leader>[ :<C-U>execute <SID>StageNext(v:count1)<CR>
+    nnoremap <buffer> <silent> <leader>] :<C-U>execute <SID>StagePrevious(v:count1)<CR>
     nnoremap <buffer> <silent> - :<C-U>silent execute <SID>StageToggle(line('.'),line('.')+v:count1-1)<CR>
     xnoremap <buffer> <silent> - :<C-U>silent execute <SID>StageToggle(line("'<"),line("'>"))<CR>
-    nnoremap <buffer> <silent> a :<C-U>let b:fugitive_display_format += 1<Bar>exe <SID>BufReadIndex()<CR>
-    nnoremap <buffer> <silent> i :<C-U>let b:fugitive_display_format -= 1<Bar>exe <SID>BufReadIndex()<CR>
-    nnoremap <buffer> <silent> C :<C-U>Gcommit<CR>
-    nnoremap <buffer> <silent> cA :<C-U>Gcommit --amend --reuse-message=HEAD<CR>
-    nnoremap <buffer> <silent> ca :<C-U>Gcommit --amend<CR>
-    nnoremap <buffer> <silent> cc :<C-U>Gcommit<CR>
-    nnoremap <buffer> <silent> cva :<C-U>Gcommit --amend --verbose<CR>
-    nnoremap <buffer> <silent> cvc :<C-U>Gcommit --verbose<CR>
-    nnoremap <buffer> <silent> D :<C-U>exe <SID>GF("edit")<CR><C-W>T:Gdiff<CR>
-    nnoremap <buffer> <silent> dd :<C-U>execute <SID>StageDiff('Gdiff')<CR>
-    nnoremap <buffer> <silent> dh :<C-U>execute <SID>StageDiff('Gsdiff')<CR>
-    nnoremap <buffer> <silent> ds :<C-U>execute <SID>StageDiff('Gsdiff')<CR>
-    nnoremap <buffer> <silent> dp :<C-U>execute <SID>StageDiffEdit()<CR><C-W>K
-    nnoremap <buffer> <silent> dv :<C-U>execute <SID>StageDiff('Gvdiff')<CR>
+    nnoremap <buffer> <silent> dt :<C-U>exe <SID>GF("edit")<CR><C-W>T:Gdiff<CR>
+    nnoremap <buffer> <silent> dd :<C-U>execute <SID>StageDiff('Gsdiff')<CR>
+    nnoremap <buffer> <silent> dp :<C-U>execute <SID>StageDiffEdit()<CR>
     nnoremap <buffer> <silent> p :<C-U>execute <SID>StagePatch(line('.'),line('.')+v:count1-1)<CR>
     xnoremap <buffer> <silent> p :<C-U>execute <SID>StagePatch(line("'<"),line("'>"))<CR>
     nnoremap <buffer> <silent> P :<C-U>execute <SID>StagePatch(line('.'),line('.')+v:count1-1)<CR>
     xnoremap <buffer> <silent> P :<C-U>execute <SID>StagePatch(line("'<"),line("'>"))<CR>
-    nnoremap <buffer> <silent> q :<C-U>if bufnr('$') == 1<Bar>quit<Bar>else<Bar>bdelete<Bar>endif<CR>
     nnoremap <buffer> <silent> r :<C-U>edit<CR>
     nnoremap <buffer> <silent> R :<C-U>edit<CR>
     nnoremap <buffer> <silent> U :<C-U>execute <SID>StageUndo()<CR>
-    nnoremap <buffer> <silent> g?   :help fugitive-:Gstatus<CR>
-    nnoremap <buffer> <silent> <F1> :help fugitive-:Gstatus<CR>
   catch /^fugitive:/
     return 'echoerr v:errmsg'
   endtry
